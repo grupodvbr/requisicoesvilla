@@ -1,503 +1,408 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Requisições • VILLA</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
-<style>
-:root{
-  --azul:#2563eb;
-  --pendente:#f3f4f6;
-  --carrinho:#dbeafe;
-  --comprado:#fef3c7;
-  --negado:#fee2e2;
-  --entregue:#dcfce7;
-  --semestoque:#ede9fe;
-  --bg:#ffffff;
-  --ink:#0f172a;
-  --muted:#64748b;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,Arial;
-  background:#f1f5f9;
-  color:var(--ink);
-}
-
-/* ===== HEADER ===== */
-header{
-  position:sticky;top:0;z-index:30;
-  background:#fff;
-  padding:10px 14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #e5e7eb;
-}
-header h1{margin:0;font-size:1.1em;font-weight:800}
-header button{
-  border:none;background:none;font-size:18px;cursor:pointer;
-}
-
-/* ===== RESUMO ===== */
-.resumo{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:8px;
-  padding:10px;
-}
-.card{
-  padding:10px;
-  border-radius:12px;
-  font-size:13px;
-  font-weight:800;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  cursor:pointer;
-}
-.card span{
-  background:#fff;
-  padding:4px 10px;
-  border-radius:999px;
-}
-.card.pendente{background:var(--pendente)}
-.card.carrinho{background:var(--carrinho)}
-.card.comprado{background:var(--comprado)}
-.card.negado{background:var(--negado)}
-.card.entregue{background:var(--entregue)}
-.card.semestoque{background:var(--semestoque)}
-
-/* ===== FILTROS ===== */
-.filtros{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:8px;
-  padding:10px;
-  background:#fff;
-  position:sticky;
-  top:52px;
-  z-index:20;
-}
-.filtros input,.filtros select{
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #cbd5e1;
-  font-size:13px;
-}
-
-/* ===== TABELA ===== */
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  font-size:13px;
-}
-thead{
-  background:var(--azul);
-  color:#fff;
-  position:sticky;
-  top:140px;
-}
-th,td{
-  padding:8px;
-  border:1px solid #e5e7eb;
-  text-align:center;
-}
-td.produto,td.qtd{
-  user-select:none;
-  cursor:pointer;
-}
-td.obs{font-size:12px;color:var(--muted)}
-select.status{
-  padding:4px;border-radius:6px;
-}
-
-/* ===== POPUPS ===== */
-.overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-}
-.popup{
-  background:#fff;
-  width:92%;
-  max-width:520px;
-  border-radius:16px;
-  padding:16px;
-  max-height:80vh;
-  overflow:auto;
-}
-.popup h3{margin-top:0}
-.popup button{
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  font-weight:800;
-}
-.btn-primary{background:var(--azul);color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
-#camera{width:100%;height:260px;background:#000;border-radius:12px;overflow:hidden;margin-top:10px}
-#camera video{width:100%;height:100%;object-fit:cover}
-</style>
-</head>
-
-<body>
-
-<header>
-  <h1>📋 Requisições</h1>
-  <button onclick="toggleTema()">🌙</button>
-</header>
-
-<!-- RESUMO -->
-<div class="resumo">
-  <div class="card pendente" onclick="abrirPopupStatus('PENDENTE')">PENDENTE <span id="cP">0</span></div>
-  <div class="card carrinho" onclick="abrirPopupStatus('NO CARRINHO')">CARRINHO <span id="cC">0</span></div>
-  <div class="card comprado" onclick="abrirPopupStatus('COMPRADO')">COMPRADO <span id="cCO">0</span></div>
-  <div class="card negado" onclick="abrirPopupStatus('NEGADO')">NEGADO <span id="cN">0</span></div>
-  <div class="card entregue" onclick="abrirPopupStatus('ENTREGUE')">ENTREGUE <span id="cE">0</span></div>
-  <div class="card semestoque" onclick="abrirPopupStatus('SEM ESTOQUE')">SEM ESTOQUE <span id="cSE">0</span></div>
-</div>
-
-<!-- FILTROS -->
-<div class="filtros">
-  <input type="date" id="dataInicio">
-  <input type="date" id="dataFim">
-  <input type="text" id="fItem" placeholder="Item / Obs">
-  <select id="fStatus">
-    <option value="PENDENTE" selected>PENDENTE</option>
-    <option value="TODOS">TODOS</option>
-    <option>NO CARRINHO</option>
-    <option>COMPRADO</option>
-    <option>NEGADO</option>
-    <option>ENTREGUE</option>
-    <option>SEM ESTOQUE</option>
-  </select>
-  <select id="fSetor"></select>
-  <select id="fUsuario"></select>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>Data</th><th>Produto</th><th>Qtd</th><th>Un</th>
-  <th>Setor</th><th>Solicitante</th><th>Obs</th><th>Status</th>
-</tr>
-</thead>
-<tbody id="tabela"></tbody>
-</table>
-
-<!-- POPUP STATUS -->
-<div class="overlay" id="popupStatus">
-  <div class="popup">
-    <h3 id="tituloStatus"></h3>
-    <table style="width:100%">
-      <tbody id="listaStatus"></tbody>
-    </table>
-    <button class="btn-danger" onclick="fecharPopupStatus()">Fechar</button>
-  </div>
-</div>
-
-<!-- POPUP PRODUTO -->
-<div class="overlay" id="popupProduto">
-  <div class="popup">
-    <h3>Alterar produto</h3>
-    <input id="novoCodigo" placeholder="Código de barras">
-    <button class="btn-primary" onclick="buscarProdutoManual()">Buscar</button>
-    <button class="btn-primary" onclick="abrirCamera()">Abrir câmera</button>
-    <div id="camera"></div>
-    <button class="btn-danger" onclick="fecharPopupProduto()">Cancelar</button>
-  </div>
-</div>
-
-<script>
-const sb=supabase.createClient(
- "https://mybsriouiwqsdufujbsc.supabase.co",
- "sb_publishable_AUyBEIVCAMUoXwDKUmlqSw_v8EY8rVN"
-);
-
-let dados=[],registroAtual=null;
-
-
-
-
-
-
-
-
-
-
-
-let vfToken = null;
-
-async function autenticarVF() {
-  const tokenSalvo = sessionStorage.getItem("vf_token");
-  if (tokenSalvo) {
-    vfToken = tokenSalvo;
-    return tokenSalvo;
-  }
-
-  const resp = await fetch("/api/auth", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" }
-  });
-
-  const raw = await resp.text();
-
-  if (!resp.ok) {
-    console.error("Erro auth VF:", raw);
-    throw new Error("Falha na autenticação VF");
-  }
-
-  const json = JSON.parse(raw);
-
-  if (!json.accessToken) {
-    throw new Error("AccessToken VF não retornado");
-  }
-
-  vfToken = json.accessToken;
-  sessionStorage.setItem("vf_token", json.accessToken);
-
-  return json.accessToken;
-}
-
-
-
-
-
-  
-/* LOAD */
-async function carregar(){
- const {data}=await sb.from("requisicoes").select("*").order("created_at",{ascending:false});
- dados=data||[];
- preencherFiltros();
- filtrar();
- calcularResumo();
-}
-(async () => {
-  await autenticarVF(); // 🔐 AUTH PRIMEIRO
-  await carregar();     // 📊 depois carrega dados
-})();
-
-/* FILTROS */
-function preencherFiltros(){
- fSetor.innerHTML='<option value="">Todos Setores</option>';
- [...new Set(dados.map(d=>d.setor).filter(Boolean))].forEach(s=>fSetor.innerHTML+=`<option>${s}</option>`);
- fUsuario.innerHTML='<option value="">Todos</option>';
- [...new Set(dados.map(d=>d.usuario).filter(Boolean))].forEach(u=>fUsuario.innerHTML+=`<option>${u}</option>`);
-}
-[dataInicio,dataFim,fItem,fStatus,fSetor,fUsuario].forEach(e=>e.oninput=()=>{filtrar();calcularResumo();});
-
-/* FILTRAR */
-function filtrar(){
- let lista=[...dados];
- if(fStatus.value!=="TODOS"){
-  lista=lista.filter(r=>{
-   const s=(r.status||"PENDENTE");
-   return fStatus.value==="PENDENTE"
-    ? !["NO CARRINHO","COMPRADO","NEGADO","ENTREGUE","SEM ESTOQUE"].includes(s)
-    : s===fStatus.value;
-  });
- }
- if(fSetor.value) lista=lista.filter(r=>r.setor===fSetor.value);
- if(fUsuario.value) lista=lista.filter(r=>r.usuario===fUsuario.value);
- if(fItem.value){
-  const t=fItem.value.toLowerCase();
-  lista=lista.filter(r=>r.produto.toLowerCase().includes(t)||(r.observacoes||"").toLowerCase().includes(t));
- }
- render(lista);
-}
-
-/* RENDER */
-function render(lista){
- tabela.innerHTML="";
- lista.forEach(r=>{
-  tabela.insertAdjacentHTML("beforeend",`
-  <tr>
-   <td>${new Date(r.created_at).toLocaleString()}</td>
-   <td class="produto" ondblclick="abrirPopupProduto('${r.id}')">${r.produto}</td>
-   <td class="qtd" ondblclick="editarQuantidade('${r.id}')">${r.quantidade}</td>
-   <td>${r.unidade}</td>
-   <td>${r.setor}</td>
-   <td>${r.usuario}</td>
-   <td class="obs">${r.observacoes||""}</td>
-   <td>
-    <select class="status" onchange="mudarStatus('${r.id}',this.value)">
-     ${["PENDENTE","NO CARRINHO","COMPRADO","NEGADO","ENTREGUE","SEM ESTOQUE"]
-       .map(s=>`<option ${r.status===s?"selected":""}>${s}</option>`).join("")}
-    </select>
-   </td>
-  </tr>
-  `);
- });
-}
-
-async function mudarStatus(id, novoStatus) {
-
-  const { data: requisicao, error } = await sb
-    .from("requisicoes")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !requisicao) {
-    alert("Erro ao carregar requisição");
-    return;
-  }
-
-  const resp = await fetch("/api/requisicao-sync", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-  token: vfToken,        // 👈 AQUI
-  requisicao,
-  novoStatus
-})
-
-
-  });
-
-  const text = await resp.text();
-
-  if (!resp.ok) {
-    console.error("Erro API:", text);
-    alert("Erro ao sincronizar com o Varejo Fácil");
-    return;
-  }
-
-  const json = JSON.parse(text);
-
-  await sb
-    .from("requisicoes")
-    .update({
-      status: novoStatus,
-      vf_requisicao_id: json.vf_requisicao_id ?? requisicao.vf_requisicao_id,
-      vf_status: json.acao,
-      vf_enviado_em: new Date().toISOString()
-    })
-    .eq("id", id);
-
-  // ✅ ATUALIZA LOCAL
-  const rLocal = dados.find(d => d.id === id);
-  if (rLocal) {
-    rLocal.status = novoStatus;
-    if (json.vf_requisicao_id) {
-      rLocal.vf_requisicao_id = json.vf_requisicao_id;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REQUISIÇÕES VILLA</title>
+  <style>
+    :root {
+      --cor-azul: #007bff;
+      --cor-vermelho: #dc3545;
+      --cor-cinza: #f1f1f1;
+      --cor-verde: #28a745;
     }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: var(--cor-cinza);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: white;
+      border-bottom: 2px solid var(--cor-cinza);
+      flex-wrap: wrap;
+    }
+    header img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    .filtros {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+      background: white;
+    }
+    .filtros input, .filtros select, .filtros button {
+      padding: 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      flex: 1 1 150px;
+    }
+    .filtros button {
+      background: var(--cor-azul);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .alerta {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: var(--cor-verde);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 9999;
+    }
+    #overlay-carregando {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+    }
+    #overlay-carregando img {
+      width: 100px;
+      margin-bottom: 15px;
+    }
+    #overlay-carregando p {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #444;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      font-size: 12px;
+    }
+    thead {
+      background: var(--cor-azul);
+      color: white;
+    }
+    th, td {
+      padding: 6px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    select.status {
+      padding: 4px;
+    }
+    #menu-solicitantes {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      background: var(--cor-azul);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    #lista-solicitantes {
+      position: fixed;
+      bottom: 120px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1001;
+      display: none;
+      padding: 10px;
+      font-size: 13px;
+    }
+    #lista-solicitantes div {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    #lista-solicitantes div:hover {
+      background: #f0f0f0;
+    }
+    #relatorio {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--cor-verde);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" alt="Logo">
+    <h1>REQUISIÇÕES MERCATTO</h1>
+  </header>
+
+  <div id="overlay-carregando">
+    <img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" alt="Carregando..." />
+    <p>Carregando dados...</p>
+  </div>
+
+  <div class="filtros">
+    <input type="date" id="dataInicio" placeholder="Data Início">
+    <input type="date" id="dataFim" placeholder="Data Fim">
+    <input type="text" id="filtroItem" placeholder="Item ou Observação">
+    <input type="text" id="filtroSolicitante" placeholder="Solicitante">
+    <select id="filtroStatus">
+      <option value="PENDENTE" selected>PENDENTE</option>
+      <option value="TODOS">TODOS</option>
+      <option value="COMPRADO">COMPRADO</option>
+      <option value="NO CARRINHO">NO CARRINHO</option>
+      <option value="NEGADO">NEGADO</option>
+      <option value="ENTREGUE">ENTREGUE</option>
+      <option value="SEM ESTOQUE">SEM ESTOQUE</option>
+    </select>
+    <button onclick="carregarRequisicoes()">🔍 Filtrar</button>
+    <button onclick="liquidarMassa('ENTREGUE')">📦 Marcar como ENTREGUE</button>
+  </div>
+
+  <div class="alerta" id="alertaStatus">Atualizando status...</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data e Hora</th>
+        <th>Item</th>
+        <th>Qtd</th>
+        <th>Unidade</th>
+        <th>Setor</th>
+        <th>Solicitante</th>
+        <th>Observações</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaRequisicoes"></tbody>
+  </table>
+
+  <!-- Menu Flutuante -->
+  <button id="menu-solicitantes" onclick="toggleSolicitantes()">👤 Solicitantes</button>
+  <div id="lista-solicitantes"></div>
+
+  <!-- Botão Relatório -->
+  <button id="relatorio" onclick="gerarRelatorio()">📤 Enviar Relatório</button>
+
+  <script>
+    const endpoint = 'https://script.google.com/macros/s/AKfycbyKdPRq8z-XzHzGP0SfL_TEBVoceAzW9bdDgBVLu0W-EMN6YEkQU2AEq7NPW2k-41MHog/exec';
+    let dadosRequisicoes = [];
+
+    async function carregarRequisicoes() {
+      document.getElementById("overlay-carregando").style.display = "flex";
+      const res = await fetch(`${endpoint}?acao=ler`);
+      dadosRequisicoes = await res.json();
+      filtrarRequisicoes();
+      document.getElementById("overlay-carregando").style.display = "none";
+    }
+
+function formatarDataHora(dataHoraOriginal) {
+  if (!dataHoraOriginal) return "";
+
+  try {
+    const d = new Date(dataHoraOriginal);
+    if (isNaN(d)) return dataHoraOriginal; // fallback caso não consiga converter
+
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    const horas = String(d.getHours()).padStart(2, '0');
+    const minutos = String(d.getMinutes()).padStart(2, '0');
+
+    return `${dia}/${mes}/${ano} - ${horas}:${minutos}`;
+  } catch (e) {
+    return dataHoraOriginal;
+  }
+}
+
+
+    function filtrarRequisicoes() {
+      const tabela = document.getElementById('tabelaRequisicoes');
+      tabela.innerHTML = '';
+      const filtroStatus = document.getElementById('filtroStatus').value;
+      const filtroItem = document.getElementById('filtroItem').value.toLowerCase();
+      const filtroSolicitante = document.getElementById('filtroSolicitante').value.toLowerCase();
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+
+      const statusValidos = ['COMPRADO', 'NO CARRINHO', 'NEGADO', 'ENTREGUE', 'SEM ESTOQUE'];
+
+      dadosRequisicoes.forEach((item) => {
+        const dataFormatada = item.dataHora?.split(' ')[0] || '';
+        const statusAtual = (item.status || '').trim().toUpperCase();
+        const consideraPendente = !statusValidos.includes(statusAtual);
+        const statusFiltrado = filtroStatus.toUpperCase();
+
+        if (statusFiltrado !== 'TODOS') {
+          if (statusFiltrado === 'PENDENTE' && !consideraPendente) return;
+          if (statusFiltrado !== 'PENDENTE' && statusAtual !== statusFiltrado) return;
+        }
+        if (filtroItem && !item.item.toLowerCase().includes(filtroItem)) return;
+        if (filtroSolicitante && !item.solicitante.toLowerCase().includes(filtroSolicitante)) return;
+        if (dataInicio && dataFormatada < dataInicio) return;
+        if (dataFim && dataFormatada > dataFim) return;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatarDataHora(item.dataHora)}</td>
+          <td>${item.item}</td>
+          <td>${item.qtd}</td>
+          <td>${item.unidade}</td>
+          <td>${item.setor}</td>
+          <td>${item.solicitante}</td>
+          <td>${item.observacoes}</td>
+          <td>
+            <select class="status" onchange="atualizarStatus(${item.index}, this.value)">
+              <option value="PENDENTE" ${statusAtual === 'PENDENTE' || consideraPendente ? 'selected' : ''}>PENDENTE</option>
+              <option value="COMPRADO" ${statusAtual === 'COMPRADO' ? 'selected' : ''}>COMPRADO</option>
+              <option value="NO CARRINHO" ${statusAtual === 'NO CARRINHO' ? 'selected' : ''}>NO CARRINHO</option>
+              <option value="NEGADO" ${statusAtual === 'NEGADO' ? 'selected' : ''}>NEGADO</option>
+              <option value="ENTREGUE" ${statusAtual === 'ENTREGUE' ? 'selected' : ''}>ENTREGUE</option>
+              <option value="SEM ESTOQUE" ${statusAtual === 'SEM ESTOQUE' ? 'selected' : ''}>SEM ESTOQUE</option>
+            </select>
+          </td>`;
+        tabela.appendChild(tr);
+      });
+    }
+
+async function atualizarStatus(index, status) {
+  mostrarAlerta("Atualizando status...");
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    body: JSON.stringify({ acao: 'atualizarStatus', index, status })
+  });
+
+  // Atualiza o objeto em memória sem recarregar tudo
+  const item = dadosRequisicoes.find(r => r.index === index);
+  if (item) {
+    item.status = status;
   }
 
-  filtrar();
-  calcularResumo();
+  mostrarAlerta("Status atualizado!");
 }
 
 
+    function toggleSolicitantes() {
+      const lista = document.getElementById("lista-solicitantes");
+      if (lista.style.display === "block") {
+        lista.style.display = "none";
+        return;
+      }
+      const nomesUnicos = [...new Set(dadosRequisicoes.map(r => r.solicitante).filter(Boolean))];
+      lista.innerHTML = nomesUnicos.map(nome => `<div onclick="filtrarPorSolicitante('${nome}')">${nome}</div>`).join('');
+      lista.style.display = "block";
+    }
 
+    function filtrarPorSolicitante(nome) {
+      document.getElementById("filtroSolicitante").value = nome;
+      filtrarRequisicoes();
+      document.getElementById("lista-solicitantes").style.display = "none";
+    }
 
+    async function liquidarMassa(statusDesejado) {
+      const filtroStatus = document.getElementById('filtroStatus').value;
+      const filtroItem = document.getElementById('filtroItem').value.toLowerCase();
+      const filtroSolicitante = document.getElementById('filtroSolicitante').value.toLowerCase();
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+      const statusValidos = ['COMPRADO', 'NO CARRINHO', 'NEGADO', 'ENTREGUE', 'SEM ESTOQUE'];
 
-/* RESUMO */
-function calcularResumo(){
- let ini=dataInicio.value?new Date(dataInicio.value):new Date(Date.now()-30*86400000);
- let fim=dataFim.value?new Date(dataFim.value+"T23:59:59"):new Date();
- const c={PENDENTE:0,"NO CARRINHO":0,COMPRADO:0,NEGADO:0,ENTREGUE:0,"SEM ESTOQUE":0};
- dados.forEach(r=>{
-  const d=new Date(r.created_at);
-  if(d<ini||d>fim) return;
-  const s=(r.status||"PENDENTE");
-  if(c[s]!=null)c[s]++; else c.PENDENTE++;
- });
- cP.textContent=c.PENDENTE;cC.textContent=c["NO CARRINHO"];
- cCO.textContent=c.COMPRADO;cN.textContent=c.NEGADO;
- cE.textContent=c.ENTREGUE;cSE.textContent=c["SEM ESTOQUE"];
+      const filtrados = dadosRequisicoes.filter((item) => {
+        const dataFormatada = item.dataHora?.split(' ')[0] || '';
+        const statusAtual = (item.status || '').trim().toUpperCase();
+        const consideraPendente = !statusValidos.includes(statusAtual);
+
+        if (filtroStatus !== 'TODOS') {
+          if (filtroStatus === 'PENDENTE' && !consideraPendente) return false;
+          if (filtroStatus !== 'PENDENTE' && statusAtual !== filtroStatus.toUpperCase()) return false;
+        }
+        if (filtroItem && !item.item.toLowerCase().includes(filtroItem)) return false;
+        if (filtroSolicitante && !item.solicitante.toLowerCase().includes(filtroSolicitante)) return false;
+        if (dataInicio && dataFormatada < dataInicio) return false;
+        if (dataFim && dataFormatada > dataFim) return false;
+        return true;
+      });
+
+      mostrarAlerta("Atualizando status...");
+      for (const item of filtrados) {
+        await fetch(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({ acao: 'atualizarStatus', index: item.index, status: statusDesejado })
+        });
+      }
+      carregarRequisicoes();
+    }
+
+    function mostrarAlerta(msg) {
+      const alerta = document.getElementById('alertaStatus');
+      alerta.textContent = msg;
+      alerta.style.display = 'block';
+      setTimeout(() => alerta.style.display = 'none', 3000);
+    }
+
+    function gerarRelatorio() {
+  const linhas = Array.from(document.querySelectorAll('#tabelaRequisicoes tr')).map(tr => {
+    const colunas = Array.from(tr.children);
+    colunas.pop(); // Remove a última coluna (Status)
+    return colunas.map(td => td.innerText);
+  });
+
+  let conteudo = `
+    <img src='https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png' height='60'>
+    <br><h2>Relatório de Requisições</h2>
+    <table border='1' cellspacing='0' cellpadding='4'>
+      <thead>
+        <tr>
+          <th>Data e Hora</th>
+          <th>Item</th>
+          <th>Qtd</th>
+          <th>Unidade</th>
+          <th>Setor</th>
+          <th>Solicitante</th>
+          <th>Observações</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  linhas.forEach(l => {
+    conteudo += "<tr>" + l.map(c => `<td>${c}</td>`).join('') + "</tr>";
+  });
+
+  conteudo += "</tbody></table>";
+
+  const win = window.open("", "Relatório");
+  win.document.write(`<html><head><title>Relatório</title></head><body>${conteudo}</body></html>`);
+  win.document.close();
 }
 
-/* POPUP STATUS */
-function abrirPopupStatus(st){
- tituloStatus.textContent=st;
- listaStatus.innerHTML="";
- let ini=dataInicio.value?new Date(dataInicio.value):new Date(Date.now()-30*86400000);
- let fim=dataFim.value?new Date(dataFim.value+"T23:59:59"):new Date();
- dados.filter(r=>{
-  const d=new Date(r.created_at);
-  return d>=ini&&d<=fim&&(r.status||"PENDENTE")===st;
- }).forEach(r=>{
-  listaStatus.insertAdjacentHTML("beforeend",`
-   <tr><td>${r.produto}</td><td>${r.quantidade}</td><td>${r.setor}</td></tr>
-  `);
- });
- popupStatus.style.display="flex";
-}
-function fecharPopupStatus(){popupStatus.style.display="none";}
 
-/* PRODUTO */
-function abrirPopupProduto(id){
- registroAtual=dados.find(r=>r.id===id);
- popupProduto.style.display="flex";
-}
-function fecharPopupProduto(){
- popupProduto.style.display="none";
- Quagga.stop();
-}
-async function buscarProdutoManual(){
-buscarProduto(normalizarCodigo(novoCodigo.value));
-}
-async function buscarProduto(code){
- const r=await fetch(`/api/buscar-barcode?barcode=${code}`);
- const j=await r.json();
- if(j?.produto){
-   
-await sb.from("requisicoes").update({
-  produto: j.produto.descricao,
-  unidade: j.produto.unidadeDeVenda,
-  barcode: code,
-  produto_id_vf: j.produto.id
-}).eq("id", registroAtual.id);
-  registroAtual.produto=j.produto.descricao;
-  registroAtual.unidade=j.produto.unidadeDeVenda;
-  fecharPopupProduto();
-  filtrar();
- }
-}
-
-/* CAMERA */
-function abrirCamera(){
- Quagga.init({
-  inputStream:{type:"LiveStream",target:camera,constraints:{facingMode:"environment"}},
-  decoder:{readers:["ean_reader","ean_8_reader","upc_reader","code_128_reader"]}
- },()=>Quagga.start());
-Quagga.onDetected(r=>{
-  const code = normalizarCodigo(r.codeResult.code);
-  buscarProduto(code);
-});
-}
-
-/* QTD */
-function editarQuantidade(id){
- const r=dados.find(x=>x.id===id);
- const decimal=["KG","G","L","ML"].includes(r.unidade);
- const v=prompt("Nova quantidade",r.quantidade);
- if(v==null) return;
- const q=decimal?parseFloat(v):parseInt(v);
- if(isNaN(q)) return;
- sb.from("requisicoes").update({quantidade:q}).eq("id",id);
- r.quantidade=q;
- filtrar();
-}
-function normalizarCodigo(codigo){
-  return "0" + String(codigo).replace(/\D/g,"");
-}
-
-</script>
-
+    carregarRequisicoes();
+  </script>
 </body>
 </html>
