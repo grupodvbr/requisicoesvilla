@@ -96,8 +96,8 @@
   </select>
 
   <label>Produto:</label>
-  <input type="text" id="item" placeholder="Digite o produto">
-
+<input type="text" id="item" list="listaProdutos" placeholder="Digite o produto">
+<datalist id="listaProdutos"></datalist>
   <label>Quantidade:</label>
   <input type="number" id="quantidade" min="1">
 
@@ -132,7 +132,7 @@ let senhaAutenticada = '';
 let usuariosCarregados = false;
 
 const URL_SENHAS = "https://script.google.com/macros/s/AKfycbxSIiv8KS5-V4nrO7rCdUQ8vjVixARM4o5dptFkWWM2u8uErKSDgJhgiq1AgNivjft56w/exec";
-
+const URL_PRODUTOS = "https://script.google.com/macros/s/AKfycbxljfQYiNsNvbJFzlEPjyBOmUdZZLMvCrJ5HR3tshPOIsHGFY3Jp1xti74Ui4e1Hoc5/exec";
 // ===============================
 // MOSTRAR OVERLAY AO CLICAR NO SELECT
 // ===============================
@@ -266,8 +266,35 @@ function atualizarTabela() {
 function save() {
   localStorage.setItem('enviados', JSON.stringify(enviados));
 }
+let produtosLista = [];
 
-carregarUsuarios();  
+function carregarProdutos(){
+
+  fetch(URL_PRODUTOS)
+  .then(r=>r.json())
+  .then(lista=>{
+
+    produtosLista = lista;
+
+    const datalist = document.getElementById("listaProdutos");
+    datalist.innerHTML = "";
+
+    lista.forEach(produto=>{
+
+      const op = document.createElement("option");
+      op.value = produto;
+      datalist.appendChild(op);
+
+    });
+
+  })
+  .catch(()=>{
+    console.log("Erro ao carregar produtos");
+  });
+
+}
+carregarUsuarios();
+carregarProdutos();
 atualizarTabela();
 </script>
 
