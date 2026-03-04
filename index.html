@@ -131,7 +131,7 @@ let enviados = JSON.parse(localStorage.getItem('enviados')) || [];
 let senhaAutenticada = '';
 let usuariosCarregados = false;
 
-const URL_SENHAS = "https://script.google.com/macros/s/AKfycbxljfQYiNsNvbJFzlEPjyBOmUdZZLMvCrJ5HR3tshPOIsHGFY3Jp1xti74Ui4e1Hoc5/exec";
+const URL_SENHAS = "https://script.google.com/macros/s/AKfycbxSIiv8KS5-V4nrO7rCdUQ8vjVixARM4o5dptFkWWM2u8uErKSDgJhgiq1AgNivjft56w/exec";
 const URL_PRODUTOS = "https://script.google.com/macros/s/AKfycbxljfQYiNsNvbJFzlEPjyBOmUdZZLMvCrJ5HR3tshPOIsHGFY3Jp1xti74Ui4e1Hoc5/exec?acao=produtos";// ===============================
 // MOSTRAR OVERLAY AO CLICAR NO SELECT
 // ===============================
@@ -220,7 +220,7 @@ const item = document.getElementById('item').value.trim().toUpperCase();
   data.append('Solicitante', solicitante);
   data.append('Observacoes', observacoes);
 
- fetch('https://script.google.com/macros/s/AKfycbzVIAzPiHYuWgOzGdxbacd9RNWwEsXWIgibn5mWMGPCEwQCNVNj77wOtKr3M4KBpVGp/exec', {
+ fetch('https://script.google.com/macros/s/AKfycbxljfQYiNsNvbJFzlEPjyBOmUdZZLMvCrJ5HR3tshPOIsHGFY3Jp1xti74Ui4e1Hoc5/exec', {
     method: 'POST',
     body: data
   })
