@@ -1,27 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#2c3e50">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<link rel="apple-touch-icon" href="icon-192.png">
   <meta charset="UTF-8">
  <title>VILLA GOURMET/CHURRASCADA</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-body{
-  font-family: Arial, sans-serif;
-  background:#f5f5f5;
-  margin:0;
-  padding:20px;
-  display:flex;
-  justify-content:center;
-}    .container { background: #fff; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1);   max-width:900px;
- width: 100%; padding: 25px; position: relative; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; padding: 30px; }
+    .container { background: #fff; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); max-width: 500px; width: 100%; padding: 25px; position: relative; }
     h2 { text-align: center; color: #333; margin-bottom: 20px; }
 
     label { display: block; margin: 12px 0 5px; font-weight: bold; }
@@ -78,32 +64,6 @@ body{
       text-align:center;
       box-shadow:0 4px 20px rgba(0,0,0,.2);
     }
-
-  @media (min-width:900px){
-
-.container{
-  max-width:1200px;
-}
-
-label{
-  font-size:18px;
-}
-
-input,select,textarea{
-  font-size:18px;
-  padding:14px;
-}
-
-button{
-  font-size:18px;
-  padding:16px;
-}
-
-table{
-  font-size:16px;
-}
-
-}
   </style>
 </head>
 <body>
@@ -336,27 +296,6 @@ carregarUsuarios();
 carregarProdutos();
 atualizarTabela();
 </script>
-<script>
 
-if ("serviceWorker" in navigator) {
-
-navigator.serviceWorker
-.register("sw.js")
-.then(reg => {
-
-  console.log("PWA ativa");
-
-  if (reg.installing) {
-    console.log("Instalando service worker");
-  }
-
-})
-.catch(err=>{
-  console.log("Erro SW",err);
-});
-
-}
-
-</script>
 </body>
 </html>
