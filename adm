@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Usuários Requisições</title>
+
+<!-- BLOQUEAR ZOOM EM CELULAR -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<style>
+/* =======================================================
+   PALETA PREMIUM GRUPO DV (Azul + Dourado)
+======================================================= */
+:root {
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --azul: #0b1e39;
+  --azul-claro: #15345c;
+  --dourado: #c9a86c;
+  --line: #d4d9e1;
+  --shadow: 0 10px 35px rgba(0,0,0,.12);
+  --radius: 14px;
+}
+
+/* =======================================================
+   BASE DO LAYOUT
+======================================================= */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  font-family: "Inter", sans-serif;
+}
+
+header {
+  background: var(--azul);
+  color: #fff;
+  padding: 25px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  box-shadow: 0 4px 18px rgba(0,0,0,.2);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 35px auto;
+  padding: 25px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* =======================================================
+   FORMULÁRIO DE CADASTRO
+======================================================= */
+.card-form {
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  margin-bottom: 25px;
+}
+
+label {
+  font-weight: 600;
+  margin-top: 12px;
+  display: block;
+  color: var(--azul);
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  font-size: 16px;
+  margin-top: 5px;
+  background: #f9fafc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: none;
+  transition: .2s;
+}
+
+.btn-blue {
+  background: var(--azul);
+  color: #fff;
+}
+.btn-blue:hover { background: var(--azul-claro); }
+
+.btn-red {
+  background: #c0392b;
+  color: #fff;
+}
+.btn-red:hover { background: #992d22; }
+
+#msg {
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--azul);
+}
+
+/* =======================================================
+   TABELA PROFISSIONAL
+======================================================= */
+.table-box {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th {
+  background: var(--azul);
+  color: #fff;
+  padding: 12px;
+  font-size: 15px;
+}
+
+td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+/* Botões pequenos nas ações */
+.table-btn-blue {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--azul);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+.table-btn-red {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+
+.table-btn-blue:hover { background: var(--azul-claro); }
+.table-btn-red:hover { background: #992d22; }
+
+/* =======================================================
+   RESPONSIVIDADE
+======================================================= */
+@media (max-width: 768px) {
+  header { font-size: 23px; padding: 18px; }
+  .container { margin: 15px; padding: 20px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>Administração de Usuários</header>
+
+<div class="container">
+
+  <!-- CARD DE CADASTRO -->
+  <div class="card-form">
+    <h2 style="margin-top: 0; color: var(--azul);">Cadastrar Novo Usuário</h2>
+
+    <label>Nome do usuário</label>
+    <input type="text" id="nome" placeholder="Ex.: Isabela, ADM, Matheus">
+
+    <label>Senha</label>
+    <input type="text" id="senha" placeholder="Digite a senha">
+
+    <button class="btn-blue" onclick="addUser()">Adicionar Usuário</button>
+    <div id="msg"></div>
+  </div>
+
+  <!-- TABELA -->
+  <h2 style="color: var(--azul);">Usuários Cadastrados</h2>
+  <div class="table-box">
+    <table id="tabela">
+      <tr>
+        <th>Nome</th>
+        <th>Senha</th>
+        <th>Ações</th>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const URL_GAS = "https://script.google.com/macros/s/AKfycbxwexTC8L2T_St6LWSbkYpkWQnvF8wdYJGWAiZvkqvMOp_VPZLmTC9HlE0DGx8hFoO82g/exec";
+
+function loadUsers(){
+  fetch(URL_GAS)
+  .then(r=>r.json())
+  .then(lista=>{
+    const tabela = document.getElementById("tabela");
+    tabela.innerHTML = `
+      <tr>
+        <th>Nome</th>
+        <th>Senha</th>
+        <th>Ações</th>
+      </tr>`;
+
+    lista.forEach(u=>{
+      let tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.nome}</td>
+        <td>${u.senha}</td>
+        <td>
+          <button class="table-btn-blue" onclick="editUser('${u.nome}')">Editar</button>
+          <button class="table-btn-red" onclick="deleteUser('${u.nome}')">Excluir</button>
+        </td>
+      `;
+      tabela.appendChild(tr);
+    });
+  });
+}
+
+function addUser(){
+  const nome = document.getElementById("nome").value.trim();
+  const senha = document.getElementById("senha").value.trim();
+
+  if(!nome || !senha){
+    msg("Preencha todos os campos.");
+    return;
+  }
+
+  fetch(URL_GAS, {
+    method:"POST",
+    body: new URLSearchParams({
+      acao:"add",
+      nome,
+      senha
+    })
+  })
+  .then(r=>r.json())
+  .then(r=>{
+    msg(r.msg || r.erro);
+    loadUsers();
+  });
+}
+
+function editUser(nome){
+  const novaSenha = prompt(`Nova senha para ${nome}:`);
+  if(!novaSenha) return;
+
+  fetch(URL_GAS, {
+    method:"POST",
+    body: new URLSearchParams({
+      acao:"update",
+      nome,
+      senha:novaSenha
+    })
+  })
+  .then(r=>r.json())
+  .then(r=>{
+    msg(r.msg || r.erro);
+    loadUsers();
+  });
+}
+
+function deleteUser(nome){
+  if(!confirm("Excluir usuário?")) return;
+
+  fetch(URL_GAS, {
+    method:"POST",
+    body: new URLSearchParams({
+      acao:"delete",
+      nome
+    })
+  })
+  .then(r=>r.json())
+  .then(r=>{
+    msg(r.msg || r.erro);
+    loadUsers();
+  });
+}
+
+function msg(t){
+  document.getElementById("msg").textContent = t;
+}
+
+loadUsers();
+</script>
+
+</body>
+</html>
