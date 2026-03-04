@@ -131,7 +131,7 @@ let enviados = JSON.parse(localStorage.getItem('enviados')) || [];
 let senhaAutenticada = '';
 let usuariosCarregados = false;
 
-const URL_SENHAS = "https://script.google.com/macros/s/AKfycbzUIqW_IKUjoMp8bgaTwn1YYV8K95GuKucMWjicyKNcoRmit_ANW-Uz4Fbc5DUc98cT/exec";
+const URL_SENHAS = "https://script.google.com/macros/s/AKfycbxSIiv8KS5-V4nrO7rCdUQ8vjVixARM4o5dptFkWWM2u8uErKSDgJhgiq1AgNivjft56w/exec";
 
 // ===============================
 // MOSTRAR OVERLAY AO CLICAR NO SELECT
@@ -221,7 +221,7 @@ function enviarItem() {
   data.append('Solicitante', solicitante);
   data.append('Observacoes', observacoes);
 
- fetch('https://script.google.com/macros/s/AKfycbxk5CVDcrdUj546keN0l7p5EKNvSATgQaOuW5D4PdxmN2CESNFrLABOWCMrattDYl1qjQ/exec', {
+ fetch('https://script.google.com/macros/s/AKfycbzGSRFYD8CvYHNvrbn9-I3nuLfH_a_wFni6dTQl1KMSb-vbtH89-yJmAxB3hrpt4pY3/exec', {
     method: 'POST',
     body: data
   })
