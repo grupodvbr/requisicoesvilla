@@ -195,7 +195,7 @@ document.getElementById('solicitante').addEventListener('change', () => {
 function enviarItem() {
   const solicitante = document.getElementById('solicitante').value.trim();
   const setor = document.getElementById('setor').value.trim();
-  const item = document.getElementById('item').value.trim();
+const item = document.getElementById('item').value.trim().toUpperCase();
   const quantidade = document.getElementById('quantidade').value.trim();
   const observacoes = document.getElementById('observacoes').value.trim();
   const horaEnvio = new Date().toLocaleTimeString();
@@ -273,22 +273,22 @@ function carregarProdutos(){
   .then(r=>r.json())
   .then(lista=>{
 
-    produtosLista = lista;
-
     const datalist = document.getElementById("listaProdutos");
     datalist.innerHTML = "";
 
     lista.forEach(produto=>{
 
-      const op = document.createElement("option");
-      op.value = produto;
-      datalist.appendChild(op);
+      const option = document.createElement("option");
+      option.value = produto;
+      datalist.appendChild(option);
 
     });
 
   })
   .catch(()=>{
+
     console.log("Erro ao carregar produtos");
+
   });
 
 }
